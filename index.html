@@ -32,9 +32,8 @@ body {
 			this.load.spritesheet('goomba', 'assets/goomba.png', 16, 16);
 			this.load.spritesheet('mario', 'assets/mario.png', 16, 16);
 			this.load.spritesheet('coin', 'assets/coin.png', 16, 16);
-
-			this.load.tilemap('level', 'assets/super_mario_map.json', null,
-					Phaser.Tilemap.TILED_JSON);
+			this.load.audio('bgm', 'audio/bgm.mp3', 'audio/bgm.ogg');
+			this.load.tilemap('level', 'assets/super_mario_map.json', null, Phaser.Tilemap.TILED_JSON);
 		}
 
 		function create() {
@@ -51,6 +50,9 @@ body {
 			map.setCollisionBetween(3, 12, true, 'solid');
 
 			map.createLayer('background');
+			
+			music = game.add.audio('bgm');
+			music.play();
 
 			layer = map.createLayer('solid');
 			layer.resizeWorld();
