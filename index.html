@@ -19,21 +19,42 @@ body {
 			create : create,
 			update : update
 		}, false, false);
+		
+		var music;
+		var stomp;
+		var pickup;
+		var jump;
+		var death;
+		var lives;
+		var coinsC;
+		var score;
+		var scoreCount = "0";
+		var coinsCount = "0";
+		var livesCount = "0";
+		var invincible = false;
+		var hurt;
+
 
 		function preload() {
 
 			//  We need this because the assets are on github pages
 			//  Remove the next 2 lines if running locally
-			this.load.baseURL = 'https://combustiblemon.github.io/Super-Mario/';
-			this.load.crossOrigin = 'anonymous';
+			//  this.load.baseURL = 'https://ioniodi.github.io/Super-Mario/';
+			//  this.load.crossOrigin = 'anonymous';
 
-			this.load.spritesheet('tiles', 'assets/super_mario_tiles.png', 16,
-					16);
-			this.load.spritesheet('goomba', 'assets/goomba.png', 16, 16);
+			this.load.spritesheet('tiles', 'assets/super_mario_tiles.png', 16, 16);
+			this.load.spritesheet('goomba', 'assets/bee.png', 16, 16);
 			this.load.spritesheet('mario', 'assets/mario.png', 16, 16);
-			this.load.spritesheet('coin', 'assets/coin.png', 16, 16);
-			game.load.audio('bgm', 'audio/bgm.mp3', 'audio/bgm.ogg');
-			this.load.tilemap('level', 'assets/super_mario_map.json', null, Phaser.Tilemap.TILED_JSON);
+			this.load.spritesheet('coin', 'assets/coins.png', 16, 16);
+			this.load.spritesheet('samus', 'assets/samus.png', 34, 38);
+			this.load.audio('bgm', 'audio/bgm.mp3', 'audio/bgm.ogg');
+			this.load.audio('pickup', 'audio/coin.wav');
+			this.load.audio('stomp', 'audio/stomp.wav');
+			this.load.audio('jump', 'audio/jump.wav');
+			this.load.audio('hurt', 'audio/hurt.wav');
+			this.load.audio('death', 'audio/death.wav');
+			this.load.tilemap('level', 'assets/super_mario_map.json', null,
+					Phaser.Tilemap.TILED_JSON);
 		}
 
 		function create() {
@@ -43,16 +64,13 @@ body {
 			game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
 			game.physics.startSystem(Phaser.Physics.ARCADE);
 
-			game.stage.backgroundColor = '#5c94fc';
+			game.stage.backgroundColor = '#292108';
 
 			map = game.add.tilemap('level');
-			map.addTilesetImage('tiles', 'tiles');
+			map.addTilesetImage('super_mario_tiles', 'tiles');
 			map.setCollisionBetween(3, 12, true, 'solid');
 
 			map.createLayer('background');
-			
-			music = game.add.audio('bgm');
-			music.play();
 
 			layer = map.createLayer('solid');
 			layer.resizeWorld();
@@ -61,27 +79,58 @@ body {
 			coins.enableBody = true;
 			map.createFromTiles(2, null, 'coin', 'stuff', coins);
 			coins.callAll('animations.add', 'animations', 'spin',
-					[ 0, 0, 1, 2 ], 3, true);
+					[ 0, 1, 2, 3, 4], 3, true);
 			coins.callAll('animations.play', 'animations', 'spin');
-
+			
+			death = game.add.audio('death');
+			hurt = game.add.audio('hurt');
+			jump = game.add.audio('jump');
+			pickup = game.add.audio('pickup');
+			stomp = game.add.audio('stomp');
+			music = game.add.audio('bgm');
+			
+			music.loopFull(0.7);
+			
 			goombas = game.add.group();
 			goombas.enableBody = true;
 			map.createFromTiles(1, null, 'goomba', 'stuff', goombas);
-			goombas.callAll('animations.add', 'animations', 'walk', [ 0, 1 ],
-					2, true);
-			goombas.callAll('animations.play', 'animations', 'walk');
-			goombas.setAll('body.bounce.x', 1);
+			goombas.callAll('animations.add', 'animations', 'walkLeft', [ 0, 1, 2 ],
+					6, true);
+			goombas.callAll('animations.add', 'animations', 'walkRight', [ 7, 6, 5 ],
+					1, true);
+			goombas.callAll('animations.play', 'animations', 'walkLeft');
+			goombas.setAll('body.bounce.x', 1 );
 			goombas.setAll('body.velocity.x', -20);
 			goombas.setAll('body.gravity.y', 500);
 
-			player = game.add.sprite(16, game.world.height - 48, 'mario');
+
+			player = game.add.sprite(15, game.world.height - 60, 'samus');
 			game.physics.arcade.enable(player);
 			player.body.gravity.y = 370;
 			player.body.collideWorldBounds = true;
-			player.animations.add('walkRight', [ 1, 2, 3 ], 10, true);
-			player.animations.add('walkLeft', [ 8, 9, 10 ], 10, true);
+			player.animations.add('walkRight', [ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 ], 12, true);
+			player.animations.add('walkLeft', [ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ], 12, true);
+			player.animations.add('deathAnim', [ 26, 26, 27, 28, 29, 30, 31, 31], 4, true);
+			player.animations.add('invincible', [ 26, 26, 27, 28, 29, 30, 31, 31], 4, true);
+			player.body.setSize( 19, 38, 8 );
 			player.goesRight = true;
-
+			lives = 3;
+			coinsC = 0;
+			score = 0;
+			
+			//var style = { font: "12px Arial", fill: "#fff", tabs: 132 };
+			livesCount = game.add.text(16, 16, 'lives x'+ lives, { fontSize: '12px', fill: '#FFFF' });
+			livesCount.fixedToCamera = true;
+			livesCount.cameraOffset.setTo(1, 1);
+			
+			scoreCount = game.add.text(16, 16, 'Score: '+ score, { fontSize: '12px', fill: '#FFFF' });
+			scoreCount.fixedToCamera = true;
+			scoreCount.cameraOffset.setTo(120, 1); 
+			
+			coinsCount = game.add.text(16, 16, 'Coins: '+ coinsC, { fontSize: '12px', fill: '#FFFF' });
+			coinsCount.fixedToCamera = true;
+			coinsCount.cameraOffset.setTo(50, 1);
+			
 			game.camera.follow(player);
 
 			cursors = game.input.keyboard.createCursorKeys();
@@ -105,48 +154,109 @@ body {
 					player.goesRight = true;
 				} else {
 					player.animations.stop();
+					
 					if (player.goesRight)
-						player.frame = 0;
+						player.frame = 10;
 					else
-						player.frame = 7;
+						player.frame = 22;
 				}
 
 				if (cursors.up.isDown && player.body.onFloor()) {
-					player.body.velocity.y = -190;
-					player.animations.stop();
+					player.body.velocity.y = -250;
+					//player.animations.stop();
+					player.body.setSize( 19, 30, 8 );
+					jump.loopFull(1);
 				}
+				
+				if (player.body.velocity.y === 0 && player.body.onFloor()){
+					jump.stop();
+					player.body.setSize( 19, 38, 8 );
+				}
+
 
 				if (player.body.velocity.y != 0) {
 					if (player.goesRight)
-						player.frame = 5;
+						player.frame = 24;
 					else
-						player.frame = 12;
+						player.frame = 25;
+				}
+				
+				if (coinsC === 100){
+					coinsC = 0;
+					lives += 1;
+					livesCount.text = 'lives x ' + lives;
+					coinsCount.text = 'Coins: ' + coinsC;
+				}
+				
+				if (score > 1000){
+					score = score - 1000;
+					lives += 1;
+					livesCount.text = 'lives x ' + lives;
+					scoreCount.text = 'Score: ' + score;
 				}
 			}
 		}
+		
 
 		function coinOverlap(player, coin) {
+			pickup.play();
 			coin.kill();
+			coinsC += 1;
+			score += 10;
+			scoreCount.text = 'Score: ' + score;
+			coinsCount.text = 'Coins: ' + coinsC;
 		}
-
+		
 		function goombaOverlap(player, goomba) {
 			if (player.body.touching.down) {
 				goomba.animations.stop();
-				goomba.frame = 2;
+				stomp.play();
+				score += 100;
+				scoreCount.text = 'Score: ' + score;
+				goomba.frame = 3;
 				goomba.body.enable = false;
 				player.body.velocity.y = -80;
 				game.time.events.add(Phaser.Timer.SECOND, function() {
 					goomba.kill();
 				});
 			} else {
-				player.frame = 6;
-				player.body.enable = false;
-				player.animations.stop();
-				game.time.events.add(Phaser.Timer.SECOND * 3, function() {
-					game.paused = true;
-				});
+				
+				if (invincible != true){
+					if(lives <= 1) {
+						lives -= 1;
+						livesCount.text = 'lives x ' + lives;
+						player.frame = 11;
+						player.body.enable = false;
+						player.animations.stop();
+						death.play();
+						player.animations.play('deathAnim');					
+						game.time.events.add(Phaser.Timer.SECOND * 2 , function() {
+							music.stop();
+							game.world.removeAll();
+							var gameOver = game.add.text(25, 16, 'Game Over', { fontSize: '35px', fill: '#FFFFFF' });
+							gameOver.fixedToCamera = true;
+							gameOver.cameraOffset.setTo(30, 70 );
+							game.time.events.add(Phaser.Timer.SECOND * 5 , function() {							
+								this.game.state.restart();							
+							});
+
+						});
+					}
+					else{
+						invincible = true;
+						hurt.play();
+						lives -= 1;
+						livesCount.text = 'lives x ' + lives;
+						player.body.sprite.alpha = 0.25;
+						game.time.events.add(Phaser.Timer.SECOND, function() {
+							invincible = false;
+							player.body.sprite.alpha = 1; 
+						});
+					}
+				}
 			}
 		}
+		
 	</script>
 </body>
 </html>
