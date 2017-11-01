@@ -36,14 +36,15 @@ body {
 		var temp = 1;
 		var quotient = 0;
 		var debugging = "0";
+		var bonus = 0;
 
 
 		function preload() {
 
 			//  We need this because the assets are on github pages
 			//  Remove the next 2 lines if running locally
-			this.load.baseURL = 'https://ioniodi.github.io/Super-Mario/';
-			this.load.crossOrigin = 'anonymous';
+			//  this.load.baseURL = 'https://ioniodi.github.io/Super-Mario/';
+			//  this.load.crossOrigin = 'anonymous';
 
 			this.load.spritesheet('tiles', 'assets/super_mario_tiles.png', 16, 16);
 			this.load.spritesheet('goomba', 'assets/bee.png', 16, 16);
@@ -111,10 +112,9 @@ body {
 			game.physics.arcade.enable(player);
 			player.body.gravity.y = 370;
 			player.body.collideWorldBounds = true;
-			player.animations.add('walkRight', [ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 ], 12, true);
-			player.animations.add('walkLeft', [ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ], 12, true);
+			player.animations.add('walkRight', [ 12, 13, 14, 15, 16, 17, 18, 19, 20, 21 ], 15, true);
+			player.animations.add('walkLeft', [ 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 ], 15, true);
 			player.animations.add('deathAnim', [ 26, 26, 27, 28, 29, 30, 31, 31], 4, true);
-			player.animations.add('invincible', [ 26, 26, 27, 28, 29, 30, 31, 31], 4, true);
 			player.body.setSize( 19, 38, 8 );
 			player.goesRight = true;
 			coinsC = 0;
@@ -175,12 +175,14 @@ body {
 				}
 				
 				if (player.body.velocity.y === 0 && player.body.onFloor()){
+					bonus = 0;
 					jump.stop();
 					player.body.setSize( 19, 38, 8 );
 				}
 
 
 				if (player.body.velocity.y != 0) {
+
 					if (player.goesRight)
 						player.frame = 24;
 					else
@@ -220,7 +222,8 @@ body {
 			if (player.body.touching.down) {
 				goomba.animations.stop();
 				stomp.play();
-				score += 100;
+				bonus += 1;
+				score += 100 * bonus;				
 				quotient = Math.floor(score/1000);
 				scoreCount.text = 'Score: ' + score;
 				//debugging.text = 'Debug ' + quotient;
@@ -246,6 +249,7 @@ body {
 						game.time.events.add(Phaser.Timer.SECOND * 2 , function() {
 							game.world.removeAll();
 								if (lives > 0){
+									jump.stop();
 									lives -= 1;
 									livesCount.text = 'lives x ' + lives;
 									var contGame = game.add.text(25, 16, 'Lives x '+ lives , { fontSize: '18px', fill: '#FFFFFF' });
@@ -264,8 +268,8 @@ body {
 							});
 
 						});
-					//}
-					/*else{
+					/*}
+					else{
 						invincible = true;
 						hurt.play();
 						lives -= 1;
@@ -275,8 +279,8 @@ body {
 							invincible = false;
 							player.body.sprite.alpha = 1; 
 						});
-					}*/
-				//}
+					}
+				}*/
 			}
 		}
 		
