@@ -25,7 +25,7 @@ body {
 		var pickup;
 		var jump;
 		var death;
-		var lives;
+		var lives = 3;
 		var coinsC;
 		var score;
 		var scoreCount = "0";
@@ -117,7 +117,6 @@ body {
 			player.animations.add('invincible', [ 26, 26, 27, 28, 29, 30, 31, 31], 4, true);
 			player.body.setSize( 19, 38, 8 );
 			player.goesRight = true;
-			lives = 3;
 			coinsC = 0;
 			score = 0;
 			
@@ -233,10 +232,11 @@ body {
 				});
 			} else {
 				
-				if (invincible != true){
-					if(lives <= 1) {
-						lives -= 1;
-						livesCount.text = 'lives x ' + lives;
+				//commented code is an hp system that used lives as hitpoints
+				//if (invincible != true){
+					//if(lives <= 1) {
+						//lives -= 1;
+						//livesCount.text = 'lives x ' + lives;
 						player.frame = 11;
 						player.body.enable = false;
 						player.animations.stop();
@@ -245,16 +245,27 @@ body {
 						music.stop();
 						game.time.events.add(Phaser.Timer.SECOND * 2 , function() {
 							game.world.removeAll();
-							var gameOver = game.add.text(25, 16, 'Game Over', { fontSize: '35px', fill: '#FFFFFF' });
-							gameOver.fixedToCamera = true;
-							gameOver.cameraOffset.setTo(30, 70 );
-							game.time.events.add(Phaser.Timer.SECOND * 5 , function() {							
-								this.game.state.restart();							
+								if (lives > 0){
+									lives -= 1;
+									livesCount.text = 'lives x ' + lives;
+									var contGame = game.add.text(25, 16, 'Lives x '+ lives , { fontSize: '18px', fill: '#FFFFFF' });
+									contGame.fixedToCamera = true;
+									contGame.cameraOffset.setTo(80, 100 );
+								}
+								else{
+									var gameOver = game.add.text(25, 16, 'Game Over', { fontSize: '35px', fill: '#FFFFFF' });
+									gameOver.fixedToCamera = true;
+									gameOver.cameraOffset.setTo(30, 70 );
+									game.paused = true;
+								}
+							game.time.events.add(Phaser.Timer.SECOND * 2 , function() {							
+								this.game.state.restart();
+
 							});
 
 						});
-					}
-					else{
+					//}
+					/*else{
 						invincible = true;
 						hurt.play();
 						lives -= 1;
@@ -264,8 +275,8 @@ body {
 							invincible = false;
 							player.body.sprite.alpha = 1; 
 						});
-					}
-				}
+					}*/
+				//}
 			}
 		}
 		
