@@ -241,9 +241,9 @@ body {
 						player.body.enable = false;
 						player.animations.stop();
 						death.play();
-						player.animations.play('deathAnim');					
+						player.animations.play('deathAnim');
+						music.stop();
 						game.time.events.add(Phaser.Timer.SECOND * 2 , function() {
-							music.stop();
 							game.world.removeAll();
 							var gameOver = game.add.text(25, 16, 'Game Over', { fontSize: '35px', fill: '#FFFFFF' });
 							gameOver.fixedToCamera = true;
