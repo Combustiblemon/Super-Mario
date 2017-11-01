@@ -250,7 +250,6 @@ body {
 						game.time.events.add(Phaser.Timer.SECOND * 2 , function() {
 							game.world.removeAll();
 								if (lives > 0){
-									jump.stop();
 									lives -= 1;
 									livesCount.text = 'lives x ' + lives;
 									var contGame = game.add.text(25, 16, 'Lives x '+ lives , { fontSize: '18px', fill: '#FFFFFF' });
